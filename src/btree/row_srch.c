@@ -368,7 +368,7 @@ __wt_row_search(WT_CURSOR_BTREE *cbt, WT_ITEM *srch_key, bool insert, WT_REF *le
     WT_SESSION_IMPL *session;
     size_t match, skiphigh, skiplow;
     uint32_t base, indx, limit, read_flags;
-    int cmp, depth;
+    int cmp, cmp2, depth;
     bool append_check, descend_right, done;
 
     session = CUR2S(cbt);
@@ -668,9 +668,12 @@ leaf_only:
                 skiplow = match;
                 base = indx + 1;
                 --limit;
-            } else if (cmp < 0)
+            } else if (cmp < 0) {
+                /* WT-10961 firing failure */
+                cmp2 = __wt_lex_compare(srch_key, item);
+                WT_ASSERT(session, cmp2 < 0);
                 skiphigh = match;
-            else
+            } else
                 goto leaf_match;
         }
     } else

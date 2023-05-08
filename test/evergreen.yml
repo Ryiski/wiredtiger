@@ -613,7 +613,7 @@ functions:
         set -o verbose
         ${format_test_setting|}
         for i in $(seq ${times|1}); do
-          ${test_env_vars|} ./format.sh ${smp_command|} ${format_test_script_args|} 2>&1
+          ${test_env_vars|} ./format.sh -F ${smp_command|} ${format_test_script_args|} 2>&1
         done
   "format test tiered":
     command: shell.exec
@@ -1091,6 +1091,20 @@ variables:
       - func: "format test script"
         vars:
           format_test_script_args: -e "SEGFAULT_SIGNALS=all" -b "catchsegv ./t" -t 360
+
+
+  - &repro-stress-test
+    name: wt-10961-repro
+    tags: ["repro"]
+    exec_timeout_secs: 25200
+    commands:
+      - func: "get project"
+      - func: "compile wiredtiger"
+        vars:
+          <<: *configure_flags_with_builtins
+      - func: "format test script"
+        vars:
+          format_test_script_args: -e "SEGFAULT_SIGNALS=all" -b "catchsegv ./t" -t 360 -c ../../../wt-10961.config
 
   - &format-stress-test-nonstandalone
     exec_timeout_secs: 25200
@@ -3989,6 +4003,27 @@ tasks:
           # See https://bugzilla.redhat.com/show_bug.cgi?id=1686261#c10 for the potential cause.
           format_test_script_args: -e "SEGFAULT_SIGNALS=all" -b "catchsegv ./t" -t 120 -- -C "mmap=false,mmap_all=false"
 
+  - <<: *repro-stress-test
+    name: repro1
+  - <<: *repro-stress-test
+    name: repro2
+  - <<: *repro-stress-test
+    name: repro3
+  - <<: *repro-stress-test
+    name: repro4
+  - <<: *repro-stress-test
+    name: repro5
+  - <<: *repro-stress-test
+    name: repro6
+  - <<: *repro-stress-test
+    name: repro7
+  - <<: *repro-stress-test
+    name: repro8
+  - <<: *repro-stress-test
+    name: repro9
+  - <<: *repro-stress-test
+    name: repro10
+
   - <<: *format-stress-test
     name: format-stress-test-1
     tags: ["stress-test-1"]
@@ -5440,9 +5475,9 @@ buildvariants:
 - name: ubuntu2004-stress-tests
   display_name: Ubuntu 20.04 Stress tests
   run_on:
-  - ubuntu2004-test
+  - ubuntu2004-medium
   expansions:
-    smp_command: -j $(grep -c ^processor /proc/cpuinfo)
+    smp_command: -j 40
     make_command: ninja
     test_env_vars:
       PATH=/opt/mongodbtoolchain/v4/bin:$PATH
@@ -5453,6 +5488,7 @@ buildvariants:
     CMAKE_PREFIX_PATH: -DCMAKE_PREFIX_PATH="$(pwd)/TCMALLOC_LIB"
     python_binary: '/opt/mongodbtoolchain/v4/bin/python3'
   tasks:
+    - name: ".repro"
     - name: ".stress-test-1"
     - name: ".stress-test-2"
     - name: ".stress-test-3"
@@ -5484,7 +5520,7 @@ buildvariants:
   run_on:
   - ubuntu2004-arm64-large
   expansions:
-    smp_command: -j $(grep -c ^processor /proc/cpuinfo)
+    smp_command: -j 40
     make_command: ninja
     test_env_vars:
       PATH=/opt/mongodbtoolchain/v4/bin:$PATH
@@ -5495,6 +5531,7 @@ buildvariants:
     CMAKE_PREFIX_PATH: -DCMAKE_PREFIX_PATH="$(pwd)/TCMALLOC_LIB"
     python_binary: '/opt/mongodbtoolchain/v4/bin/python3'
   tasks:
+    - name: ".repro"
     - name: ".stress-test-1"
     - name: ".stress-test-2"
     - name: ".stress-test-3"
