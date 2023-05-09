@@ -430,6 +430,11 @@ __cursor_row_next(
         cbt->ins = WT_SKIP_FIRST(cbt->ins_head);
         cbt->row_iteration_slot = 1;
         cbt->rip_saved = NULL;
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
         goto new_insert;
     }
 
@@ -475,8 +480,12 @@ restart_read_insert:
         }
 
         /* Check for the end of the page. */
-        if (cbt->row_iteration_slot >= page->entries * 2 + 1)
+        if (cbt->row_iteration_slot >= page->entries * 2 + 1){
+            __wt_yield();
+            __wt_yield();
+            __wt_yield();
             return (WT_NOTFOUND);
+        }
         ++cbt->row_iteration_slot;
 
         /*
@@ -952,6 +961,8 @@ err:
          * will return 1,2,3...10 and subsequent call to next will return a prepare conflict. Now if
          * we call prev key 10 will be returned which will be same as earlier returned key.
          */
+        // Add check for newpage here. If we're on a new page don't do a key order check.
+        // Change: && !newpage && session->txn->isolation == WT_ISO_READ_UNCOMMITTED
         if (!F_ISSET(cbt, WT_CBT_ITERATE_RETRY_PREV))
             ret = __wt_cursor_key_order_check(session, cbt, true);
 
