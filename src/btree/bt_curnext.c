@@ -422,6 +422,11 @@ __cursor_row_next(
      * Initialize for each new page.
      */
     if (newpage) {
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
+        __wt_yield();
         /*
          * Be paranoid and set the slot out of bounds when moving to a new page.
          */
@@ -430,11 +435,6 @@ __cursor_row_next(
         cbt->ins = WT_SKIP_FIRST(cbt->ins_head);
         cbt->row_iteration_slot = 1;
         cbt->rip_saved = NULL;
-        __wt_yield();
-        __wt_yield();
-        __wt_yield();
-        __wt_yield();
-        __wt_yield();
         goto new_insert;
     }
 
@@ -480,7 +480,7 @@ restart_read_insert:
         }
 
         /* Check for the end of the page. */
-        if (cbt->row_iteration_slot >= page->entries * 2 + 1){
+        if (cbt->row_iteration_slot >= page->entries * 2 + 1) {
             __wt_yield();
             __wt_yield();
             __wt_yield();
@@ -605,6 +605,7 @@ __cursor_key_order_check_row(WT_SESSION_IMPL *session, WT_CURSOR_BTREE *cbt, boo
     if (cbt->lastkey->size != 0)
         WT_RET(__wt_compare(session, btree->collator, cbt->lastkey, key, &cmp));
 
+    // TODO: Save more last keys here!!!
     if (cbt->lastkey->size == 0 || (next && cmp < 0) || (!next && cmp > 0)) {
         cbt->lastref = cbt->ref;
         cbt->lastslot = cbt->slot;

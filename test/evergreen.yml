@@ -613,7 +613,7 @@ functions:
         set -o verbose
         ${format_test_setting|}
         for i in $(seq ${times|1}); do
-          ${test_env_vars|} ./format.sh ${smp_command|} ${format_test_script_args|} 2>&1
+          ${test_env_vars|} ./format.sh ${smp_command|} -F ${format_test_script_args|} 2>&1
         done
   "format test tiered":
     command: shell.exec
@@ -5542,6 +5542,7 @@ buildvariants:
     CMAKE_PREFIX_PATH: -DCMAKE_PREFIX_PATH="$(pwd)/TCMALLOC_LIB"
     python_binary: '/opt/mongodbtoolchain/v4/bin/python3'
   tasks:
+    - name: ".wt11017"
     - name: ".stress-test-1"
     - name: ".stress-test-2"
     - name: ".stress-test-3"
