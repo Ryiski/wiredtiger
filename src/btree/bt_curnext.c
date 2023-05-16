@@ -614,6 +614,15 @@ __cursor_key_order_check_row(WT_SESSION_IMPL *session, WT_CURSOR_BTREE *cbt, boo
         return (__wt_buf_set(session, cbt->lastkey, cbt->iface.key.data, cbt->iface.key.size));
     }
 
+    /* 
+     * It's possible to see out of order keys in read uncommitted isolation mode when we cross page 
+     * boundaries and race with one thread deleting the last seen key and another inserting new keys 
+     * at the boundary of the next page. Avoid asserting in this case.
+     */
+    if (session->txn->isolation == WT_ISO_READ_UNCOMMITTED && cbt->lastref != cbt->ref){
+        return (0);
+    }
+
     WT_ERR(__wt_scr_alloc(session, 512, &a));
     WT_ERR(__wt_scr_alloc(session, 512, &b));
     WT_ERR(__wt_scr_alloc(session, 512, &c));
